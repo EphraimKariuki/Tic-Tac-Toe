@@ -1,3 +1,6 @@
+import View from "./view.js";
+import Store from "./store.js";
+
 const App = {
     // All of our selected HTML elemnents
     $: {
@@ -9,6 +12,7 @@ const App = {
         modal: document.querySelector('[data-id="modal"]'),
         modalText: document.querySelector('[data-id="modal-text"]'),
         modalBtn: document.querySelector('[data-id="modal-btn"]'),
+        turn:  document.querySelector('[data-id="turn"]')
     },
 
     state: {
@@ -41,11 +45,6 @@ const App = {
             if (p2wins) winner = 2;
           });
 
-          console.log(p1Moves)
-
-
-
-
         return {
             status: moves.length === 9 || winner != null? 'complete': 'in-progress', // In-progress | complete
             winner // 1 | 2 | null 
@@ -57,7 +56,6 @@ const App = {
     },
 
     registerEventListeners() {
-        console.log(App.$.squares)
         // DONE
         App.$.menu.addEventListener('click', (event) => {
             App.$.menuItems.classList.toggle("hidden");
@@ -73,7 +71,13 @@ const App = {
             console.log("Add a new round")     
         });
 
-        // TODO
+        App.$.modalBtn.addEventListener('click', (event) => {
+            App.state.meve = []
+            // App.$.squares.forEach((square) => square.replaceChildren())
+            App.$.modal.classList.add('hidden')
+        })
+
+        //DONE
         App.$.squares.forEach((square)=> {
             square.addEventListener("click", (event) => {            
                 // Check if there is arleady a player, if so, return early
@@ -87,7 +91,7 @@ const App = {
                 }
 
                 // Determine which icon to add to the square
-                const icon = document.createElement('i');
+                
                 const lastMove = App.state.moves[App.state.moves.length - 1];
                 const getOppositePlayer = (playerId) => playerId === 1 ? 2 : 1;
 
@@ -95,7 +99,9 @@ const App = {
                    App.state.moves.length === 0 
                    ? 1 
                    : getOppositePlayer(lastMove.playerId);
+                const nextPlayer = getOppositePlayer(currentPlayer)   
                 
+                const icon = document.createElement('i');
                 if (currentPlayer === 1){
                     icon.classList.add('fa-solid', 'fa-x', 'yellow');               
                 } else {
@@ -133,4 +139,48 @@ const App = {
     },
 };
 
-window.addEventListener('load', App.init);
+// window.addEventListener('load', App.init);
+
+const players = [
+    {
+        id: 1,
+        name: "player 1",
+        iconClass: "fa-x",
+        colorClass: "turquoise",
+    },
+    {
+        id: 2,
+        name: "player 2",
+        iconClass: "fa-x",
+        colorClass: "yellow",
+    },
+]
+
+function init(){
+    const view = new View();
+    const store = new Store(players);
+
+    
+
+    view.bindGameResetEvent (event => {
+        console.log('Reset Event')
+        console.log(event)
+    })
+
+    view.bindNewRoundEvent (event => {
+        console.log('new round Event');
+        console.log(event)
+    })
+
+    view.bindPlayerMoveEvent (event => {
+        const clickedSquare = event.target
+        
+        view.handlePlayerMove(clickedSquare, store.game.currentPlayer)
+        store.playerMove(+clickedSquare.id)
+
+        view.setTurnIndicator(store.game.currentPlayer);
+    })
+    
+}
+
+window.addEventListener('load', init);
